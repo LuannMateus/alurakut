@@ -1,5 +1,5 @@
 import { NextPage } from 'next';
-import { FormEvent, Fragment, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Head from 'next/head';
 
 import { MainGrid } from '../components/MainGrid';
@@ -8,6 +8,8 @@ import { ProfileRelationsBoxWrapper } from '../components/ProfileRelation';
 import { AlurakutMenu } from '../lib/AluraKutCommonsjs/Menu';
 import { OrkutNostalgicIconSet } from '../lib/AluraKutCommonsjs/OrkutNostalgicIconSet';
 import { AlurakutProfileSidebarMenuDefault } from '../lib/AluraKutCommonsjs/AlurakutProfileSidebarMenuDefault';
+
+import { ProfileRelationRender } from '../components/ProfileRelationRender';
 
 type ProfileUser = {
   githubUser: string;
@@ -40,15 +42,41 @@ const ProfileSidebar: NextPage<ProfileUser> = ({ githubUser }) => {
 };
 
 const Home = () => {
-  const [communities, setCommunities] = useState([]);
+  const [communities, setCommunities] = useState([
+    {
+      title: 'Curso em Vídeo',
+      imageURL:
+        'https://pbs.twimg.com/profile_images/378800000157650181/8e1bbdf27ff82759f9101e5e7dfc0c31_400x400.jpeg',
+    },
+  ]);
+
+  const [followers, setFollowers] = useState([]);
 
   const favoritePersons = [
-    'juunegreiros',
-    'omariosouto',
-    'peas',
-    'rafaballerini',
-    'marcobrunodev',
-    'felipefialho',
+    {
+      title: 'juunegreiros',
+      imageURL: 'https://github.com/juunegreiros.png',
+    },
+    {
+      title: 'omariosouto',
+      imageURL: 'https://github.com/omariosouto.png',
+    },
+    {
+      title: 'peas',
+      imageURL: 'https://github.com/peas.png',
+    },
+    {
+      title: 'rodrigobranas',
+      imageURL: 'https://github.com/rodrigobranas.png',
+    },
+    {
+      title: 'wesleywillians',
+      imageURL: 'https://github.com/wesleywillians.png',
+    },
+    {
+      title: 'argentinaluiz',
+      imageURL: 'https://github.com/argentinaluiz.png',
+    },
   ];
 
   const handleSubmit = (event: FormEvent) => {
@@ -67,6 +95,21 @@ const Home = () => {
 
     setCommunities([...communities, newCommunity]);
   };
+
+  useEffect(() => {
+    fetch('https://api.github.com/users/luannmateus/followers')
+      .then((resp) => resp.json())
+      .then((followers) => {
+        const parseFollowers = followers.map((follower) => {
+          return {
+            title: follower.login,
+            imageURL: follower.avatar_url,
+          };
+        });
+
+        setFollowers(parseFollowers);
+      });
+  }, []);
 
   return (
     <>
@@ -125,43 +168,18 @@ const Home = () => {
           style={{ gridArea: 'profileRelationsArea' }}
         >
           <ProfileRelationsBoxWrapper>
-            <h2 className="smallTitle">Comunidades ({communities.length})</h2>
-
-            <ul>
-              {communities.map((actualItem: Communities, index) => {
-                return (
-                  <Fragment key={`actualItem.title_${index}`}>
-                    <li>
-                      <a href={`/users/${actualItem.title}`}>
-                        <img src={actualItem.imageURL} />
-                        <span>{actualItem.title}</span>
-                      </a>
-                    </li>
-                  </Fragment>
-                );
-              })}
-            </ul>
+            <ProfileRelationRender title="Seguidores" values={followers} />
           </ProfileRelationsBoxWrapper>
 
           <ProfileRelationsBoxWrapper>
-            <h2 className="smallTitle">
-              Pessoas da comunidade ({favoritePersons.length})
-            </h2>
+            <ProfileRelationRender title="Comunidades" values={communities} />
+          </ProfileRelationsBoxWrapper>
 
-            <ul>
-              {favoritePersons.map((actualItem) => {
-                return (
-                  <Fragment key={actualItem}>
-                    <li>
-                      <a href={`/users/${actualItem}`}>
-                        <img src={`https://github.com/${actualItem}.png`} />
-                        <span>{actualItem}</span>
-                      </a>
-                    </li>
-                  </Fragment>
-                );
-              })}
-            </ul>
+          <ProfileRelationsBoxWrapper>
+            <ProfileRelationRender
+              title="Pessoas da comunidade"
+              values={favoritePersons}
+            />
           </ProfileRelationsBoxWrapper>
         </div>
       </MainGrid>
