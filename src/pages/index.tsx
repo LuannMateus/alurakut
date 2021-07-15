@@ -17,7 +17,8 @@ type ProfileUser = {
 
 type Communities = {
   title: string;
-  imageURL: string;
+  imageUrl: string;
+  creatorSlug: string;
 };
 
 const ProfileSidebar: NextPage<ProfileUser> = ({ githubUser }) => {
@@ -42,44 +43,38 @@ const ProfileSidebar: NextPage<ProfileUser> = ({ githubUser }) => {
 };
 
 const Home = () => {
-  const [communities, setCommunities] = useState([
-    {
-      title: 'Curso em Vídeo',
-      imageURL:
-        'https://pbs.twimg.com/profile_images/378800000157650181/8e1bbdf27ff82759f9101e5e7dfc0c31_400x400.jpeg',
-    },
-  ]);
+  const [communities, setCommunities] = useState([]);
 
   const [followers, setFollowers] = useState([]);
 
   const favoritePersons = [
     {
       title: 'juunegreiros',
-      imageURL: 'https://github.com/juunegreiros.png',
+      imageUrl: 'https://github.com/juunegreiros.png',
     },
     {
       title: 'omariosouto',
-      imageURL: 'https://github.com/omariosouto.png',
+      imageUrl: 'https://github.com/omariosouto.png',
     },
     {
       title: 'peas',
-      imageURL: 'https://github.com/peas.png',
+      imageUrl: 'https://github.com/peas.png',
     },
     {
       title: 'rodrigobranas',
-      imageURL: 'https://github.com/rodrigobranas.png',
+      imageUrl: 'https://github.com/rodrigobranas.png',
     },
     {
       title: 'wesleywillians',
-      imageURL: 'https://github.com/wesleywillians.png',
+      imageUrl: 'https://github.com/wesleywillians.png',
     },
     {
       title: 'argentinaluiz',
-      imageURL: 'https://github.com/argentinaluiz.png',
+      imageUrl: 'https://github.com/argentinaluiz.png',
     },
   ];
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
 
     const form = event.target as HTMLFormElement;
@@ -88,12 +83,31 @@ const Home = () => {
 
     const newCommunity = {
       title: formData.get('title') as string,
-      imageURL: formData.get('image') as string,
+      imageUrl: formData.get('image') as string,
+      creatorSlug: 'luannmateus',
     } as Communities;
 
-    if (!newCommunity.title.length || !newCommunity.imageURL.length) return;
+    if (!newCommunity.title.length || !newCommunity.imageUrl.length) return;
 
-    setCommunities([...communities, newCommunity]);
+    try {
+      fetch('/api/communities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newCommunity),
+      }).then(async (resp) => {
+        const responseJSON = await resp.json();
+
+        const community = responseJSON.data;
+
+        console.log(community);
+
+        setCommunities([...communities, community]);
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
@@ -103,11 +117,38 @@ const Home = () => {
         const parseFollowers = followers.map((follower) => {
           return {
             title: follower.login,
-            imageURL: follower.avatar_url,
+            imageUrl: follower.avatar_url,
           };
         });
 
         setFollowers(parseFollowers);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch('https://graphql.datocms.com/', {
+      method: 'POST',
+      headers: {
+        Authorization: process.env.NEXT_PUBLIC_DATO_CMS_READ_TOKEN,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        query: `query {
+        allCommunities {
+              id 
+              title
+              imageUrl
+              creatorSlug
+            }
+          }`,
+      }),
+    })
+      .then((response) => response.json())
+      .then((json) => {
+        const allCommunities = json.data.allCommunities;
+
+        setCommunities(allCommunities);
       });
   }, []);
 
@@ -138,9 +179,9 @@ const Home = () => {
             />
           </Box>
 
-          <Box onSubmit={handleSubmit}>
+          <Box>
             <h2 className="subTitle">O que você deseja fazer?</h2>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div>
                 <input
                   placeholder="Qual vai ser o nome da sua comunidade?"

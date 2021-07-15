@@ -7,7 +7,7 @@ type ProfileRelationRenderProps = {
 
 type Profile = {
   title: string;
-  imageURL: string;
+  imageUrl: string;
 };
 
 const ProfileRelationRender: FunctionComponent<ProfileRelationRenderProps> = ({
@@ -25,7 +25,7 @@ const ProfileRelationRender: FunctionComponent<ProfileRelationRenderProps> = ({
             <Fragment key={`profile_${actualItem.title}_${index}`}>
               <li>
                 <a href={`/users/${actualItem.title}`}>
-                  <img src={actualItem.imageURL} alt="" />
+                  <img src={actualItem.imageUrl} alt="" />
                   <span>{actualItem.title}</span>
                 </a>
               </li>
