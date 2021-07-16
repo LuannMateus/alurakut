@@ -1,3 +1,5 @@
+import { FunctionComponent } from 'react';
+
 import styled from 'styled-components';
 
 const BASE_URL = 'http://alurakut.vercel.app/';
@@ -19,7 +21,7 @@ const AlurakutProfileSidebarMenuDefaultWrapper = styled.div`
   }
 `;
 
-const AlurakutProfileSidebarMenuDefault = () => {
+const AlurakutProfileSidebarMenuDefault: FunctionComponent = () => {
   return (
     <AlurakutProfileSidebarMenuDefaultWrapper>
       <nav>

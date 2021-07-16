@@ -1,6 +1,10 @@
-import { NextPage } from 'next';
-import { FormEvent, useEffect, useState } from 'react';
+import { GetServerSideProps, NextPage } from 'next';
+
+import { FormEvent, FunctionComponent, useEffect, useState } from 'react';
 import Head from 'next/head';
+import nookies from 'nookies';
+
+import jwt from 'jsonwebtoken';
 
 import { MainGrid } from '../components/MainGrid';
 import { Box } from '../components/Box';
@@ -19,6 +23,10 @@ type Communities = {
   title: string;
   imageUrl: string;
   creatorSlug: string;
+};
+
+type HomeProps = {
+  githubUser: string;
 };
 
 const ProfileSidebar: NextPage<ProfileUser> = ({ githubUser }) => {
@@ -42,7 +50,7 @@ const ProfileSidebar: NextPage<ProfileUser> = ({ githubUser }) => {
   );
 };
 
-const Home = () => {
+const Home: FunctionComponent<HomeProps> = ({ githubUser }) => {
   const [communities, setCommunities] = useState([]);
 
   const [followers, setFollowers] = useState([]);
@@ -84,7 +92,7 @@ const Home = () => {
     const newCommunity = {
       title: formData.get('title') as string,
       imageUrl: formData.get('image') as string,
-      creatorSlug: 'luannmateus',
+      creatorSlug: githubUser,
     } as Communities;
 
     if (!newCommunity.title.length || !newCommunity.imageUrl.length) return;
@@ -111,7 +119,7 @@ const Home = () => {
   };
 
   useEffect(() => {
-    fetch('https://api.github.com/users/luannmateus/followers')
+    fetch(`https://api.github.com/users/${githubUser}/followers`)
       .then((resp) => resp.json())
       .then((followers) => {
         const parseFollowers = followers.map((follower) => {
@@ -157,10 +165,10 @@ const Home = () => {
       <Head>
         <title>Home | Alurakut</title>
       </Head>
-      <AlurakutMenu githubUser="luannmateus" />
+      <AlurakutMenu githubUser={githubUser} />
       <MainGrid>
         <div className="profileArea" style={{ gridArea: 'profileArea' }}>
-          <ProfileSidebar githubUser="luannmateus" />
+          <ProfileSidebar githubUser={githubUser} />
         </div>
         <div className="welcomeArea" style={{ gridArea: 'welcomeArea' }}>
           <Box>
@@ -226,6 +234,32 @@ const Home = () => {
       </MainGrid>
     </>
   );
+};
+
+export const getServerSideProps: GetServerSideProps<ProfileUser> = async (
+  ctx
+) => {
+  const cookie = nookies.get(ctx);
+  const token = cookie.USER_TOKEN;
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  const isAuth = jwt.decode(token);
+
+  const { githubUser } = isAuth as ProfileUser;
+
+  return {
+    props: {
+      githubUser,
+    },
+  };
 };
 
 export default Home;

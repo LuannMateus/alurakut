@@ -1,6 +1,9 @@
 import { FunctionComponent, useState } from 'react';
+import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { Link } from '../Link';
+
+import nookies from 'nookies';
 
 import { AlurakutMenuProfileSidebar } from '../AlurakutMenuProfileSidebar';
 
@@ -129,7 +132,13 @@ type MenuProps = {
 };
 
 const AlurakutMenu: FunctionComponent<MenuProps> = ({ githubUser }) => {
+  const router = useRouter();
   const [isMenuOpen, setMenuState] = useState(false);
+
+  const handleLogout = () => {
+    nookies.destroy(null, 'USER_TOKEN');
+    router.push('/login');
+  };
 
   return (
     <AlurakutMenuWrapper isMenuOpen={isMenuOpen}>
@@ -152,7 +161,7 @@ const AlurakutMenu: FunctionComponent<MenuProps> = ({ githubUser }) => {
         </nav>
 
         <nav>
-          <a href={`/logout`}>Sair</a>
+          <a onClick={handleLogout}>Sair</a>
           <div>
             <input placeholder="Pesquisar no Orkut" />
           </div>
